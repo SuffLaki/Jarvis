@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <title>Jarvis</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Jarvis">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>J.A.R.V.I.S.</h1>
+        <button id="settings-btn" aria-label="Einstellungen">⚙</button>
+    </header>
+
+    <main id="main">
+        <div id="orb-wrap">
+            <div id="orb" class="idle"></div>
+        </div>
+        <div id="status">Tippe auf den Kreis, um Jarvis zu starten.</div>
+        <div id="transcript"></div>
+        <form id="text-form" autocomplete="off">
+            <input id="text-input" type="text" placeholder="Oder hier schreiben..." enterkeyhint="send">
+            <button type="submit" aria-label="Senden">➤</button>
+        </form>
+    </main>
+
+    <section id="settings" hidden>
+        <h2>Einrichtung</h2>
+        <p class="hint">Die Keys werden nur auf diesem iPhone gespeichert.</p>
+        <label>Gemini API Key
+            <input id="s-gemini" type="password" autocomplete="off" placeholder="AQ... oder AIza...">
+        </label>
+        <label>ElevenLabs API Key
+            <input id="s-eleven" type="password" autocomplete="off" placeholder="sk_...">
+        </label>
+        <label>Name <input id="s-name" type="text"></label>
+        <label>Anrede <input id="s-address" type="text"></label>
+        <label>Beruf <input id="s-role" type="text"></label>
+        <label>Stadt fuers Wetter <input id="s-city" type="text"></label>
+        <details>
+            <summary>Erweitert</summary>
+            <label>Gemini Modell <input id="s-model" type="text"></label>
+            <label>ElevenLabs Voice ID <input id="s-voice" type="text"></label>
+        </details>
+        <button id="save-btn">Speichern</button>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
