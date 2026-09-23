@@ -180,6 +180,13 @@ h1 {
 #settings details { margin: 4px 0 18px; color: #8a8f98; }
 #settings summary { margin-bottom: 12px; }
 
+#settings-error {
+    color: #e0a030;
+    font-size: 14px;
+    min-height: 20px;
+    margin-bottom: 8px;
+}
+
 #save-btn {
     width: 100%;
     background: #2a6cb8;

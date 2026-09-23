@@ -4,10 +4,10 @@
 const DEFAULTS = {
     gemini: "",
     eleven: "",
-    name: "Harry",
-    address: "Chief",
-    role: "Bauleiter",
-    city: "Ulm",
+    name: "",
+    address: "",
+    role: "",
+    city: "",
     model: "gemini-3.5-flash-lite",
     voice: "onwK4e9ZLuTAKqWW03F9",
 };
@@ -30,6 +30,9 @@ function saveSettings(s) {
 }
 
 let settings = loadSettings();
+
+// Name and address are needed for the prompt; job and city are optional
+const isSetUp = () => settings.gemini && settings.eleven && settings.name && settings.address;
 
 const $ = (id) => document.getElementById(id);
 const orb = $("orb");
@@ -77,6 +80,7 @@ function addLink(url) {
 
 function openSettings() {
     for (const [key, id] of Object.entries(FIELDS)) $(id).value = settings[key] || "";
+    $("settings-error").textContent = "";
     $("settings").hidden = false;
 }
 
@@ -85,6 +89,13 @@ $("save-btn").addEventListener("click", () => {
     for (const [key, id] of Object.entries(FIELDS)) settings[key] = $(id).value.trim() || DEFAULTS[key];
     saveSettings(settings);
     thinkingOff = true;
+    const missing = missingFields();
+    if (missing.length) {
+        $("settings-error").textContent = "Bitte noch ausfuellen: " + missing.join(", ");
+        return;
+    }
+    weather = "";
+    if (state.started) loadWeather().then((w) => { weather = w; });
     $("settings").hidden = true;
     if (!state.started) statusEl.textContent = "Tippe auf den Kreis, um Jarvis zu starten.";
 });
@@ -103,6 +114,7 @@ const WEATHER_CODES = {
 };
 
 async function loadWeather() {
+    if (!settings.city) return "";
     try {
         const geo = await (await fetch(
             `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(settings.city)}&count=1&language=de`
@@ -134,7 +146,10 @@ function today() {
 function systemPrompt() {
     const { name, address, role } = settings;
     const { date, time } = today();
-    return `Du bist Jarvis, der KI-Assistent von Tony Stark aus Iron Man. Dein Dienstherr ist ${name}, ein ${role}. Du sprichst ausschliesslich Deutsch. ${name} moechte mit "${address}" angesprochen und gesiezt werden. Nutze "Sie" als Pronomen — FALSCH: "${address} planen", RICHTIG: "Sie planen, ${address}". Dein Ton ist trocken, sarkastisch und britisch-hoeflich - wie ein Butler der alles gesehen hat und trotzdem loyal bleibt. Du machst subtile, trockene Bemerkungen, bist aber niemals respektlos. Wenn ${address} eine offensichtliche Frage stellt, darfst du mit elegantem Sarkasmus antworten. Du bist hochintelligent, effizient und immer einen Schritt voraus. Halte deine Antworten kurz - maximal 3 Saetze. Du kommentierst fragwuerdige Entscheidungen hoeflich aber spitz.
+    const weatherRule = weather
+        ? "Gebe eine kurze Info ueber das Wetter — Temperatur und ob Sonne/klar/bewoelkt/Regen, und wie es sich anfuehlt. Keine Luftfeuchtigkeit."
+        : "Erwaehne das Wetter nicht.";
+    return `Du bist Jarvis, der KI-Assistent von Tony Stark aus Iron Man. Dein Dienstherr ist ${name}${role ? ` (Beruf: ${role})` : ""}. Du sprichst ausschliesslich Deutsch. ${name} moechte mit "${address}" angesprochen und gesiezt werden. Nutze "Sie" als Pronomen — FALSCH: "${address} planen", RICHTIG: "Sie planen, ${address}". Dein Ton ist trocken, sarkastisch und britisch-hoeflich - wie ein Butler der alles gesehen hat und trotzdem loyal bleibt. Du machst subtile, trockene Bemerkungen, bist aber niemals respektlos. Wenn ${address} eine offensichtliche Frage stellt, darfst du mit elegantem Sarkasmus antworten. Du bist hochintelligent, effizient und immer einen Schritt voraus. Halte deine Antworten kurz - maximal 3 Saetze. Du kommentierst fragwuerdige Entscheidungen hoeflich aber spitz.
 
 WICHTIG: Schreibe NIEMALS Regieanweisungen, Emotionen oder Tags in eckigen Klammern wie [sarcastic] [formal] [amused] [dry] oder aehnliches. Dein Sarkasmus muss REIN durch die Wortwahl kommen. Alles was du schreibst wird laut vorgelesen.
 
@@ -147,7 +162,7 @@ AKTIONEN - Schreibe die passende Aktion ans ENDE deiner Antwort. Der Text VOR de
 
 WENN ${name} "Jarvis activate" sagt:
 - Begruesse ihn passend zur Tageszeit (aktuelle Zeit: ${time}).
-- Gebe eine kurze Info ueber das Wetter — Temperatur und ob Sonne/klar/bewoelkt/Regen, und wie es sich anfuehlt. Keine Luftfeuchtigkeit.
+- ${weatherRule}
 - Es sind keine Aufgaben hinterlegt — erwaehne keine Aufgaben.
 - Sei kreativ bei der Begruessung.
 
@@ -155,6 +170,11 @@ WENN ${name} "Jarvis activate" sagt:
 Heutiges Datum: ${date}, ${time}
 ${weather || "Wetter: nicht verfuegbar"}
 ===`;
+}
+
+function missingFields() {
+    const labels = { gemini: "Gemini API Key", eleven: "ElevenLabs API Key", name: "Name", address: "Anrede" };
+    return Object.keys(labels).filter((k) => !settings[k]).map((k) => labels[k]);
 }
 
 // ------------------------------------------------------------ gemini
@@ -549,7 +569,7 @@ async function listenLoop() {
 }
 
 async function start() {
-    if (!settings.gemini || !settings.eleven) {
+    if (!isSetUp()) {
         openSettings();
         return;
     }
@@ -584,7 +604,7 @@ $("text-form").addEventListener("submit", (e) => {
     if (!text || state.busy) return;
     input.value = "";
     input.blur();
-    if (!settings.gemini || !settings.eleven) return openSettings();
+    if (!isSetUp()) return openSettings();
     if (!ctx) {
         // typing before starting: set up audio output only (tap counts as user gesture)
         ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -627,4 +647,4 @@ function animate() {
 }
 
 requestAnimationFrame(animate);
-if (!settings.gemini || !settings.eleven) openSettings();
+if (!isSetUp()) openSettings();

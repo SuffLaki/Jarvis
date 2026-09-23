@@ -41,15 +41,16 @@
         <label>ElevenLabs API Key
             <input id="s-eleven" type="password" autocomplete="off" placeholder="sk_...">
         </label>
-        <label>Name <input id="s-name" type="text"></label>
-        <label>Anrede <input id="s-address" type="text"></label>
-        <label>Beruf <input id="s-role" type="text"></label>
-        <label>Stadt fuers Wetter <input id="s-city" type="text"></label>
+        <label>Name <input id="s-name" type="text" placeholder="z.B. Harry"></label>
+        <label>Anrede <input id="s-address" type="text" placeholder="z.B. Chief, Sir oder Vorname"></label>
+        <label>Beruf (optional) <input id="s-role" type="text" placeholder="z.B. Bauleiter"></label>
+        <label>Stadt fuers Wetter (optional) <input id="s-city" type="text" placeholder="z.B. Ulm"></label>
         <details>
             <summary>Erweitert</summary>
             <label>Gemini Modell <input id="s-model" type="text"></label>
             <label>ElevenLabs Voice ID <input id="s-voice" type="text"></label>
         </details>
+        <p id="settings-error"></p>
         <button id="save-btn">Speichern</button>
     </section>
 
