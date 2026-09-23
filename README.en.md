@@ -96,6 +96,7 @@ Tap **Speichern** (Save). You can change everything later via the gear icon **�
 | Faded | Paused |
 
 - **Tap the circle:** pause or resume.
+- **Mic button (bottom left):** turns the microphone fully off and back on. Red with a slash means the mic is off. Turning it on restarts the mic, which helps if Jarvis stops listening after you unlock your iPhone.
 - **Text field at the bottom:** type a message instead of speaking.
 - **⚙ in the top right:** settings.
 
@@ -141,6 +142,7 @@ Costs are low for normal use. See https://ai.google.dev/pricing for current pric
 | "Gemini-Tageslimit erreicht" (daily limit reached) | Wait until tomorrow or enable billing with Google |
 | "Diese ElevenLabs-Stimme braucht einen bezahlten Tarif" (voice needs a paid plan) | Under ⚙ → Erweitert, clear the voice ID to fall back to the default voice |
 | "Kein Mikrofonzugriff" (no microphone access) | iPhone **Settings** → **Safari** → **Microphone** → "Ask" or "Allow", then restart the app |
+| Jarvis stops listening after unlocking the iPhone | Tap the mic button (bottom left) until it's blue again |
 | The circle doesn't react when I speak | Close the app completely (swipe up in the app switcher), reopen it and stay quiet for a moment at startup |
 | I can't hear Jarvis | Turn off silent mode and turn up the volume |
 | The app shows an old version | Close the app completely and reopen it |

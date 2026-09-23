@@ -44,6 +44,7 @@ const state = {
     started: false,
     paused: false,
     busy: false,       // a request is running (voice or typed)
+    muted: false,      // microphone switched off via the mic button
 };
 let history = [];      // {role: "user" | "model", text}
 let weather = "";
@@ -338,14 +339,30 @@ let analyser = null;
 const mic = { level: 0, threshold: 0.01, onBlock: null };
 const BLOCK_SIZE = 2048;
 
+// Safari mutes Web Audio in silent mode unless the page declares it plays real audio
+function setAudioSession(type) {
+    try { if (navigator.audioSession) navigator.audioSession.type = type; } catch {}
+}
+
+function ensureOutput() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!analyser) {
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.connect(ctx.destination);
+    }
+}
+
+let processor = null;
+let micStream = null;
+let micSource = null;
+
 async function startAudio() {
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    setAudioSession("play-and-record");
+    ensureOutput();
     await ctx.resume();
-    const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-    });
-    const source = ctx.createMediaStreamSource(stream);
-    const processor = ctx.createScriptProcessor(BLOCK_SIZE, 1, 1);
+
+    processor = ctx.createScriptProcessor(BLOCK_SIZE, 1, 1);
     processor.onaudioprocess = (e) => {
         const data = e.inputBuffer.getChannelData(0);
         let sum = 0;
@@ -354,15 +371,36 @@ async function startAudio() {
         mic.level = rms;
         if (mic.onBlock) mic.onBlock(new Float32Array(data), rms);
     };
-    source.connect(processor);
     const silent = ctx.createGain();  // the processor only runs while connected to the output
     silent.gain.value = 0;
     processor.connect(silent);
     silent.connect(ctx.destination);
 
-    analyser = ctx.createAnalyser();
-    analyser.fftSize = 1024;
-    analyser.connect(ctx.destination);
+    await connectMic();
+}
+
+// (Re)opens the microphone. iOS can kill the mic track when the screen locks,
+// so this is also what the mic button and returning to the app use.
+async function connectMic() {
+    disconnectMic();
+    micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
+    micSource = ctx.createMediaStreamSource(micStream);
+    micSource.connect(processor);
+}
+
+function disconnectMic() {
+    if (micSource) micSource.disconnect();
+    if (micStream) micStream.getTracks().forEach((t) => t.stop());
+    micSource = null;
+    micStream = null;
+    mic.level = 0;
+}
+
+function micAlive() {
+    const track = micStream && micStream.getAudioTracks()[0];
+    return !!track && track.readyState === "live" && !track.muted;
 }
 
 function calibrate(seconds = 1) {
@@ -399,7 +437,7 @@ function recordUtterance() {
             resolve(result);
         };
         const interruptCheck = setInterval(() => {
-            if (state.paused || state.busy) finish(null);
+            if (state.paused || state.muted || state.busy) finish(null);
         }, 150);
 
         mic.onBlock = (block, rms) => {
@@ -539,6 +577,11 @@ async function sendText(text, { hidden = false } = {}) {
 
 async function listenLoop() {
     while (true) {
+        if (state.muted) {
+            if (!state.busy) setMode("idle", "Mikrofon aus — Mikrofon-Taste antippen zum Zuhoeren");
+            await sleep(200);
+            continue;
+        }
         if (state.paused) {
             setMode("idle", "Pausiert — Kreis antippen zum Fortsetzen");
             await sleep(200);
@@ -583,6 +626,7 @@ async function start() {
         console.error(e);
         return;
     }
+    updateMicButton();
     setMode("idle", "Kalibriere Mikrofon... bitte kurz still sein");
     const [w] = await Promise.all([loadWeather(), calibrate()]);
     weather = w;
@@ -607,18 +651,63 @@ $("text-form").addEventListener("submit", (e) => {
     if (!isSetUp()) return openSettings();
     if (!ctx) {
         // typing before starting: set up audio output only (tap counts as user gesture)
-        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        setAudioSession("playback");
+        ensureOutput();
         ctx.resume();
-        analyser = ctx.createAnalyser();
-        analyser.fftSize = 1024;
-        analyser.connect(ctx.destination);
     }
     sendText(text);
 });
 
-// iOS suspends audio in the background; pick it back up when the app returns
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && ctx && ctx.state !== "running") ctx.resume();
+// ------------------------------------------------------------ mic button
+
+const micBtn = $("mic-btn");
+
+function updateMicButton() {
+    const on = state.started && !state.muted;
+    micBtn.classList.toggle("off", !on);
+    micBtn.setAttribute("aria-label", on ? "Mikrofon stummschalten" : "Mikrofon einschalten");
+}
+
+async function setMuted(muted) {
+    if (muted) {
+        disconnectMic();
+        setAudioSession("playback");
+        state.muted = true;
+    } else {
+        setAudioSession("play-and-record");
+        try {
+            if (ctx.state !== "running") await ctx.resume();
+            await connectMic();
+            state.muted = false;
+            state.paused = false;
+        } catch (e) {
+            console.error("[jarvis] mic restart failed", e);
+            state.muted = true;
+            statusEl.textContent = "Mikrofon konnte nicht gestartet werden. Bitte nochmal tippen.";
+        }
+    }
+    updateMicButton();
+}
+
+micBtn.addEventListener("click", () => {
+    if (!state.started) return start();
+    setMuted(!state.muted);
+});
+
+// iOS suspends audio in the background and may kill the mic when the screen locks.
+// On return try to revive both; if that fails, the mic button restarts the mic by hand.
+document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState !== "visible" || !ctx) return;
+    if (ctx.state !== "running") ctx.resume().catch(() => {});
+    if (!state.started || state.muted || !processor || micAlive()) return;
+    try {
+        await connectMic();
+    } catch (e) {
+        console.warn("[jarvis] mic did not come back", e);
+        disconnectMic();
+        state.muted = true;
+        updateMicButton();
+    }
 });
 
 // ------------------------------------------------------------ orb animation
@@ -647,4 +736,5 @@ function animate() {
 }
 
 requestAnimationFrame(animate);
+updateMicButton();
 if (!isSetUp()) openSettings();

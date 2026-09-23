@@ -94,6 +94,7 @@ Tippe auf **Speichern**. Du kannst die Angaben später jederzeit über das Zahnr
 | Blass | Pausiert |
 
 - **Kreis antippen:** Pause bzw. weiter.
+- **Mikrofon-Taste unten links:** Mikrofon komplett aus- und wieder einschalten. Rot mit Strich heißt, das Mikrofon ist aus. Das Einschalten startet das Mikrofon neu. Das hilft, wenn Jarvis nach dem Entsperren des iPhones nicht mehr zuhört.
 - **Textfeld unten:** Nachricht tippen statt sprechen.
 - **⚙ oben rechts:** Einstellungen.
 
@@ -139,6 +140,7 @@ Die Kosten sind bei normaler Nutzung gering. Aktuelle Preise stehen unter https:
 | „Gemini-Tageslimit erreicht“ | Bis morgen warten oder bei Google die Abrechnung aktivieren |
 | „Diese ElevenLabs-Stimme braucht einen bezahlten Tarif“ | Unter ⚙ → Erweitert die Voice ID leeren, dann wird die Standard-Stimme genutzt |
 | „Kein Mikrofonzugriff“ | iPhone-**Einstellungen** → **Safari** → **Mikrofon** → „Fragen“ oder „Erlauben“, dann App neu starten |
+| Jarvis hört nach dem Entsperren nicht mehr zu | Mikrofon-Taste unten links antippen, bis sie wieder blau ist |
 | Kreis reagiert nicht, wenn ich spreche | App komplett schließen (im App-Umschalter nach oben wischen), neu öffnen und beim Start kurz still sein |
 | Jarvis ist nicht zu hören | Lautlos-Modus ausschalten und Lautstärke hochdrehen |
 | App zeigt eine alte Version | App komplett schließen und neu öffnen |

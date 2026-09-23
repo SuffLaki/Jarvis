@@ -27,6 +27,15 @@
         <div id="status">Tippe auf den Kreis, um Jarvis zu starten.</div>
         <div id="transcript"></div>
         <form id="text-form" autocomplete="off">
+            <button id="mic-btn" type="button" class="off" aria-label="Mikrofon einschalten">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                    <path d="M5 10v1a7 7 0 0 0 14 0v-1"></path>
+                    <line x1="12" y1="18" x2="12" y2="22"></line>
+                    <line class="slash" x1="3" y1="3" x2="21" y2="21"></line>
+                </svg>
+            </button>
             <input id="text-input" type="text" placeholder="Oder hier schreiben..." enterkeyhint="send">
             <button type="submit" aria-label="Senden">➤</button>
         </form>

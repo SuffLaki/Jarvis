@@ -144,6 +144,29 @@ h1 {
     flex-shrink: 0;
 }
 
+#mic-btn {
+    background: #2a6cb8;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+#mic-btn .slash { display: none; }
+
+#mic-btn.off {
+    background: #5c1a1a;
+    color: #ff8a8a;
+}
+
+#mic-btn.off .slash { display: inline; }
+
 #settings {
     position: fixed;
     inset: 0;
