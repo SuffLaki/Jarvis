@@ -38,6 +38,9 @@ function face(type, cx, cy, s) {
       `<line x1="${mx}" y1="${my + mh / 2}" x2="${mx + mw}" y2="${my + mh / 2}" stroke="${OUT}" stroke-width="${s * 0.02}"/>`;
     extra = `<path d="M${cx - ex - e * 1.7},${cy + ey - e * 2.4} l${e * 2.4},${e * 0.9}" stroke="${OUT}" stroke-width="${s * 0.045}" stroke-linecap="round"/><path d="M${cx + ex + e * 1.7},${cy + ey - e * 2.4} l${-e * 2.4},${e * 0.9}" stroke="${OUT}" stroke-width="${s * 0.045}" stroke-linecap="round"/>` +
       sweat(cx + s * 0.42, cy - s * 0.3, s * 0.13) + sweat(cx - s * 0.46, cy - s * 0.1, s * 0.09);
+  } else if (type === 'excited') {
+    eyes = [cx - ex, cx + ex].map(x => `<path d="M${x - e * 1.3},${cy + ey + e * 0.5} Q${x},${cy + ey - e * 1.6} ${x + e * 1.3},${cy + ey + e * 0.5}" fill="none" stroke="${OUT}" stroke-width="${s * 0.05}" stroke-linecap="round"/>`).join('');
+    mouth = `<path d="M${cx - s * 0.27},${cy + s * 0.07} L${cx + s * 0.27},${cy + s * 0.07} Q${cx + s * 0.25},${cy + s * 0.42} ${cx},${cy + s * 0.42} Q${cx - s * 0.25},${cy + s * 0.42} ${cx - s * 0.27},${cy + s * 0.07}Z" fill="${OUT}"/><ellipse cx="${cx}" cy="${cy + s * 0.33}" rx="${s * 0.13}" ry="${s * 0.06}" fill="#e2445c"/><rect x="${cx - s * 0.2}" y="${cy + s * 0.08}" width="${s * 0.4}" height="${s * 0.07}" fill="#fff"/>`;
   } else if (type === 'greedy') {
     eyes = [cx - ex, cx + ex].map(x => `<text x="${x}" y="${cy + ey + e * 1.3}" font-family="Luckiest" font-size="${s * 0.3}" text-anchor="middle" fill="#2fd25a" stroke="${OUT}" stroke-width="${s * 0.02}">$</text>`).join('');
     mouth = `<path d="M${cx - s * 0.25},${cy + s * 0.1} Q${cx},${cy + s * 0.42} ${cx + s * 0.25},${cy + s * 0.1} Z" fill="${OUT}"/><path d="M${cx - s * 0.2},${cy + s * 0.12} L${cx + s * 0.2},${cy + s * 0.12} L${cx + s * 0.17},${cy + s * 0.18} L${cx - s * 0.17},${cy + s * 0.18}Z" fill="#fff"/>`;

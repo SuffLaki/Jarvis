@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Luckiest; src: url(luckiest.ttf); }
+@font-face { font-family: Lilita; src: url(lilita.ttf); }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #1c0b45; }
+svg { position: absolute; inset: 0; }
+</style></head>
+<body><svg id="s" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<script src="common.js"></script>
+<script src="style.js"></script>
+<script>
+const R = rng(11);
+let g = `<defs>${DEFS}</defs>` + skyBurst(960, 170, R);
+
+// Tower with every multiplier floor
+const T = tower({ cx: 960, baseY: 1010, topY: 300, baseW: 780, topW: 240, mults: MULTS, R, breakLedge: 4 });
+g += T.svg;
+
+// Players standing on the floors
+const shirts = ['#ff4757', '#2f7bff', '#ffb800', '#22c55e', '#a855f7', '#ff7a1a'];
+T.floors.forEach((f, i) => {
+  const u = 15 * f.k;
+  [-0.3, 0.3].forEach((dx, j) => {
+    if (i === 3 && j === 1) return; // that spot is the broken ledge
+    if ((i + j) % 3 === 2) return;
+    g += avatar(960 + dx * f.wb, f.yb - 8 * f.k, u, { shirt: shirts[(i * 2 + j) % 6], face: 'smile', la: j ? 0 : 10, ra: j ? -10 : 0 });
+  });
+});
+// Player slipping off the broken ledge
+const bf = T.floors[3];
+g += avatar(960 + bf.wb * 0.56, bf.yt + 70, 15, { shirt: '#2f7bff', face: 'shock', la: 150, ra: -150, rot: 35 });
+
+// Money bag + coins on top
+const topY = T.ys[T.ys.length - 1];
+g += `<ellipse cx="960" cy="${topY - 10}" rx="230" ry="60" fill="#ffd34a" opacity=".5" filter="url(#glow)"/>`;
+[[-120, -2, 20], [-95, -12, 18], [112, -2, 20], [132, -14, 16], [-140, -18, 15], [88, -14, 16]].forEach(([dx, dy, r]) => g += coin(960 + dx, topY + dy, r, 0.15));
+g += moneyBag(960, topY - 4, 0.56);
+
+// Big player falling off on the left, with flying cash
+g += avatar(390, 640, 44, { shirt: '#ff4757', pants: '#26304f', face: 'shock', la: 150, ra: -160, ll: 25, rl: -10, rot: -32, hair: '#3b2414' });
+[[170, 420, 140, -25], [600, 380, 120, 18], [160, 780, 130, 35], [630, 640, 110, -12]].forEach(([x, y, w, r]) => g += bill(x, y, w, r));
+[[110, 600, 26, .4], [520, 300, 22, 1.8], [560, 800, 24, 1.1]].forEach(([x, y, r, a]) => g += coin(x, y, r, a));
+
+// Red button + excited player slamming it
+g += `<circle cx="1560" cy="700" r="230" fill="#ff3b3b" opacity=".35" filter="url(#glow)"/>`;
+g += redButton(1560, 760, 0.95);
+g += avatar(1790, 950, 44, { shirt: '#22c55e', pants: '#1d2b44', face: 'excited', la: 125, ra: 8, cap: '#ffb800' });
+g += `<path d="M1450,560 l-30,-40 M1520,535 l-8,-50 M1600,535 l10,-50 M1670,560 l30,-40" stroke="#fff" stroke-width="10" stroke-linecap="round"/>`;
+
+// Snowy foreground + title
+g += snowHill(925);
+g += goldTitle('CASH OUT!', 960, 1030, 250, -2);
+g += whiteText('HOW FAR', 290, 140, 92, -6) + whiteText('WILL YOU GO?', 310, 240, 80, -6, '#ffe04a');
+
+// Player count badge
+g += `<g transform="translate(1690 150) rotate(6)">
+  <rect x="-170" y="-58" width="340" height="116" rx="58" fill="#ff3b5c" stroke="${BROWN}" stroke-width="10"/>
+  <text y="22" font-family="Luckiest" font-size="62" text-anchor="middle" fill="#fff" stroke="${BROWN}" stroke-width="10" paint-order="stroke">24 PLAYERS</text></g>`;
+
+document.getElementById('s').innerHTML = g;
+</script></body></html>
