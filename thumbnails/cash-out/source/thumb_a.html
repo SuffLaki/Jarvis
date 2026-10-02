@@ -1,0 +1,162 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Luckiest; src: url(luckiest.ttf); }
+@font-face { font-family: Lilita; src: url(lilita.ttf); }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0a0518; }
+#stage { position: relative; width: 1920px; height: 1080px; }
+svg { position: absolute; inset: 0; }
+.t { position: absolute; font-family: Luckiest; paint-order: stroke fill; white-space: nowrap; }
+#title { left: 0; right: 0; top: 18px; text-align: center; font-size: 200px; line-height: 1;
+  color: #ffd93b; -webkit-text-stroke: 22px #140a24; transform: rotate(-2.5deg);
+  background: linear-gradient(#fff6a8 0%, #ffd93b 40%, #ff9d00 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 12px 0 #140a24) drop-shadow(0 0 40px rgba(60,255,120,.75)); }
+#sub { left: 0; right: 0; top: 232px; text-align: center; font-size: 62px; color: #fff; -webkit-text-stroke: 12px #140a24;
+  transform: rotate(-2.5deg); filter: drop-shadow(0 6px 0 #140a24); letter-spacing: 1px; }
+</style></head>
+<body><div id="stage"><svg id="s" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+</div>
+<script src="common.js"></script>
+<script>
+const R = rng(7);
+let g = `<defs>
+  <radialGradient id="bg" cx="50%" cy="48%" r="70%"><stop offset="0" stop-color="#7a35e0"/><stop offset=".45" stop-color="#2a0f5a"/><stop offset="1" stop-color="#090414"/></radialGradient>
+  <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7b0"/><stop offset=".5" stop-color="#ffcf3a"/><stop offset="1" stop-color="#ff8a00"/></linearGradient>
+  <linearGradient id="gPurp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3ff"/><stop offset=".5" stop-color="#c04bff"/><stop offset="1" stop-color="#5a12c8"/></linearGradient>
+  <linearGradient id="gCyan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8fbff"/><stop offset=".5" stop-color="#3fd8ff"/><stop offset="1" stop-color="#0a6cff"/></linearGradient>
+  <radialGradient id="abyss" cx="50%" cy="30%" r="70%"><stop offset="0" stop-color="#000"/><stop offset=".6" stop-color="#1a0010"/><stop offset="1" stop-color="#ff2a3d"/></radialGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4b3478"/><stop offset="1" stop-color="#20123c"/></linearGradient>
+  <linearGradient id="btn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8dff7a"/><stop offset=".55" stop-color="#22c93c"/><stop offset="1" stop-color="#0d8a2a"/></linearGradient>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+</defs>
+<rect width="1920" height="1080" fill="url(#bg)"/>`;
+
+// Light rays from the gates
+for (let i = 0; i < 14; i++) {
+  const a = -80 + i * 12;
+  g += `<path d="M960,560 L${960 + Math.cos(a * Math.PI / 180) * 1800},${560 + Math.sin(a * Math.PI / 180) * 1800} L${960 + Math.cos((a + 5) * Math.PI / 180) * 1800},${560 + Math.sin((a + 5) * Math.PI / 180) * 1800}Z" fill="#fff" opacity="0.045"/>`;
+}
+
+// Tower walls (stone bricks) left and right
+function wall(x0, x1, flip) {
+  let s = `<path d="M${x0},0 L${x1},0 L${x1},780 L${x0},1080 Z" fill="#241640"/>`;
+  for (let row = 0; row < 14; row++) {
+    const y = row * 80;
+    for (let c = 0; c < 4; c++) {
+      const w = (x1 - x0) / 3.2;
+      const bx = x0 + (c - (row % 2) * 0.5) * w;
+      if (bx > x1 || bx + w < x0) continue;
+      s += `<rect x="${Math.max(x0, bx) + 4}" y="${y + 4}" width="${Math.min(x1, bx + w) - Math.max(x0, bx) - 8}" height="72" rx="8" fill="${shade('#3a2766', (R() - 0.5) * 0.25)}" stroke="#140a24" stroke-width="4"/>`;
+    }
+  }
+  return s;
+}
+g += `<g>${wall(0, 230)}</g><g transform="translate(1920 0) scale(-1 1)">${wall(0, 230)}</g>`;
+// Torches on walls
+[[150, 420], [1770, 420]].forEach(([x, y]) => {
+  g += `<circle cx="${x}" cy="${y - 40}" r="90" fill="#ff9a2a" opacity=".45" filter="url(#glow)"/>
+  <rect x="${x - 14}" y="${y - 10}" width="28" height="80" rx="6" fill="#6b3d1a" stroke="${OUT}" stroke-width="6"/>
+  <path d="M${x},${y - 90} Q${x + 34},${y - 40} ${x + 18},${y - 8} Q${x},${y + 4} ${x - 18},${y - 8} Q${x - 34},${y - 40} ${x},${y - 90}Z" fill="#ffb21f" stroke="${OUT}" stroke-width="6"/>
+  <path d="M${x},${y - 55} Q${x + 14},${y - 30} ${x},${y - 12} Q${x - 14},${y - 30} ${x},${y - 55}Z" fill="#fff3a0"/>`;
+});
+
+// Floor
+g += `<path d="M0,1080 L230,780 L1690,780 L1920,1080Z" fill="url(#floor)" stroke="${OUT}" stroke-width="6"/>`;
+for (let i = 0; i <= 12; i++) { const xt = 230 + i * 1460 / 12, xb = i * 1920 / 12; g += `<line x1="${xt}" y1="780" x2="${xb}" y2="1080" stroke="#140a24" stroke-width="4" opacity=".55"/>`; }
+[840, 920, 1010].forEach(y => { const k = (y - 780) / 300; g += `<line x1="${230 - 230 * k}" y1="${y}" x2="${1690 + 230 * k}" y2="${y}" stroke="#140a24" stroke-width="4" opacity=".55"/>`; });
+
+// Gates
+function archPath(cx, top, w, h) {
+  const r = w / 2;
+  return `M${cx - r},${top + h} L${cx - r},${top + r} A${r},${r} 0 0 1 ${cx + r},${top + r} L${cx + r},${top + h} Z`;
+}
+function gate(cx, grad, glowCol, label) {
+  const top = 330, w = 300, h = 450;
+  return `<path d="${archPath(cx, top, w + 40, h + 20)}" transform="translate(0 -20)" fill="${glowCol}" opacity=".7" filter="url(#glow)"/>
+  <path d="${archPath(cx, top - 26, w + 64, h + 26)}" fill="#5a4a7a" stroke="${OUT}" stroke-width="8"/>
+  <path d="${archPath(cx, top - 26, w + 64, h + 26)}" fill="none" stroke="#8a78b0" stroke-width="6" stroke-dasharray="40 14" transform="scale(1)"/>
+  <path d="${archPath(cx, top, w, h)}" fill="url(#${grad})" stroke="${OUT}" stroke-width="8"/>
+  <path d="${archPath(cx, top + 30, w - 70, h - 30)}" fill="#fff" opacity=".18"/>
+  <text x="${cx}" y="${top + 255}" font-family="Luckiest" font-size="170" text-anchor="middle" fill="#fff" stroke="${OUT}" stroke-width="10" paint-order="stroke" opacity=".95">${label}</text>`;
+}
+g += gate(570, 'gGold', '#ffb400', '?');
+g += gate(1350, 'gCyan', '#00c8ff', '?');
+
+// Middle gate: breaking apart
+const mg = gate(960, 'gPurp', '#c050ff', '');
+g += `<g transform="rotate(4 960 780)">${mg}
+  <path d="M960,330 L930,420 L990,480 L920,560 L1000,640 L950,780" fill="none" stroke="${OUT}" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M960,330 L930,420 L990,480 L920,560 L1000,640 L950,780" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M990,480 L1080,450 M920,560 L840,590 M1000,640 L1090,700 M930,420 L850,380" fill="none" stroke="${OUT}" stroke-width="10" stroke-linecap="round"/>
+</g>`;
+// Flying chunks from the middle gate
+for (let i = 0; i < 16; i++) {
+  const x = 820 + R() * 300, y = 250 + R() * 520, s = 18 + R() * 34, rot = R() * 360;
+  g += `<rect x="${x}" y="${y}" width="${s}" height="${s * 0.8}" rx="4" fill="${R() > .5 ? '#5a4a7a' : '#b04cff'}" stroke="${OUT}" stroke-width="5" transform="rotate(${rot} ${x} ${y})"/>`;
+}
+
+// Abyss hole in the floor under the middle gate
+g += `<path d="M800,780 L835,800 L815,835 L860,870 L840,915 L900,960 L960,940 L1020,975 L1080,935 L1110,890 L1090,850 L1130,815 L1110,780 Z" fill="url(#abyss)" stroke="${OUT}" stroke-width="8"/>`;
+g += `<ellipse cx="960" cy="900" rx="120" ry="40" fill="#ff2a3d" opacity=".5" filter="url(#glow)"/>`;
+// Falling floor tiles
+[[790, 850, 20], [1120, 870, -25], [960, 1010, 40]].forEach(([x, y, r]) => g += `<rect x="${x - 35}" y="${y - 22}" width="70" height="44" rx="6" fill="#3e2a66" stroke="${OUT}" stroke-width="6" transform="rotate(${r} ${x} ${y})"/>`);
+
+// Falling avatar (in the hole)
+g += avatar(965, 880, 34, { shirt: '#ff4757', pants: '#3a3a5c', face: 'shock', la: 150, ra: -150, ll: 20, rl: -25, rot: 160, hair: '#3b2414' });
+g += coin(880, 930, 18, 0.6) + coin(1050, 990, 15, 1.2) + coin(1010, 860, 13, 0.2);
+
+// Standing avatars reacting
+g += avatar(470, 1010, 52, { shirt: '#2f7bff', pants: '#23284a', face: 'shock', la: 0, ra: -120, cap: '#ff3b30' });
+g += avatar(720, 1050, 44, { shirt: '#ffb800', pants: '#3a2a1a', face: 'shock', la: 160, ra: -160, hair: '#1a1a1a', sleeve: '#ffb800' });
+g += avatar(1250, 1040, 48, { shirt: '#22c55e', pants: '#1d2b44', face: 'greedy', la: 30, ra: -20, hair: '#e8d24a', logo: '$' });
+
+// Flying money
+[[300, 620, 0.8], [1650, 640, 2.1], [380, 330, 1.4], [1560, 330, 0.3], [700, 300, 2.6], [1240, 290, 1.8], [1100, 210, .9], [250, 870, 1]].forEach(([x, y, r]) => g += coin(x, y, 26 + R() * 14, r));
+[[1520, 530, 25], [390, 520, -30], [800, 190, 15], [1600, 860, -10]].forEach(([x, y, r]) => g += bill(x, y, 120, r));
+
+// Multiplier sticker (top right)
+g += `<g transform="translate(1690 560) rotate(10)">
+  <circle r="150" fill="#ffd400" opacity=".5" filter="url(#glow)"/>
+  <path d="${Array.from({ length: 32 }, (_, i) => { const a = i * Math.PI / 16, r = i % 2 ? 118 : 148; return (i ? 'L' : 'M') + Math.cos(a) * r + ',' + Math.sin(a) * r; }).join(' ')}Z" fill="#ff3b5c" stroke="${OUT}" stroke-width="10" stroke-linejoin="round"/>
+  <circle r="104" fill="#ffe34d" stroke="${OUT}" stroke-width="8"/>
+  <text y="22" font-family="Luckiest" font-size="100" text-anchor="middle" fill="#ff3b5c" stroke="${OUT}" stroke-width="10" paint-order="stroke">x25</text>
+  <text y="62" font-family="Lilita" font-size="25" text-anchor="middle" fill="${OUT}">MULTIPLIER</text>
+</g>`;
+
+// Floor badge (top left)
+g += `<g transform="translate(225 560) rotate(-8)">
+  <rect x="-130" y="-70" width="260" height="140" rx="26" fill="#1b0f33" stroke="#ffd93b" stroke-width="10"/>
+  <text y="-14" font-family="Lilita" font-size="40" text-anchor="middle" fill="#cbb8ff">FLOOR</text>
+  <text y="50" font-family="Luckiest" font-size="78" text-anchor="middle" fill="#fff">12</text>
+</g>`;
+
+// Big CASH OUT button (bottom right)
+g += `<g transform="translate(1640 935) rotate(-6)">
+  <ellipse cx="0" cy="34" rx="250" ry="70" fill="#000" opacity=".45" filter="url(#soft)"/>
+  <circle r="160" fill="#3cff6a" opacity=".45" filter="url(#glow)"/>
+  <rect x="-240" y="-62" width="480" height="150" rx="40" fill="#0a6a22" stroke="${OUT}" stroke-width="10"/>
+  <rect x="-240" y="-92" width="480" height="150" rx="40" fill="url(#btn)" stroke="${OUT}" stroke-width="10"/>
+  <rect x="-205" y="-78" width="410" height="40" rx="20" fill="#fff" opacity=".35"/>
+  <text y="20" font-family="Luckiest" font-size="84" text-anchor="middle" fill="#fff" stroke="${OUT}" stroke-width="12" paint-order="stroke" x="-14">CASH OUT</text>
+</g>`;
+
+// Sparkles
+[[330, 760, 22], [1460, 230, 26], [1840, 400, 20], [640, 210, 18], [1180, 640, 16], [1550, 770, 24]].forEach(([x, y, r]) => g += sparkle(x, y, r, '#fff8c0'));
+
+// Title + subtitle as SVG text so the outline renders cleanly
+g += `<linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6a8"/><stop offset=".45" stop-color="#ffd93b"/><stop offset="1" stop-color="#ff9500"/></linearGradient>
+<g transform="rotate(-2.5 960 160)" font-family="Luckiest" text-anchor="middle">
+  <text x="960" y="205" font-size="205" fill="#38ff7a" stroke="#38ff7a" stroke-width="30" opacity=".55" filter="url(#glow)">CASH OUT!</text>
+  <text x="960" y="219" font-size="205" fill="${OUT}" stroke="${OUT}" stroke-width="26" stroke-linejoin="round">CASH OUT!</text>
+  <text x="960" y="205" font-size="205" fill="url(#tg)" stroke="${OUT}" stroke-width="26" stroke-linejoin="round" paint-order="stroke">CASH OUT!</text>
+  <text x="960" y="200" font-size="205" fill="none" stroke="#fff" stroke-width="3" opacity=".35">CASH OUT!</text>
+  <text x="960" y="298" font-size="64" fill="${OUT}" stroke="${OUT}" stroke-width="14" stroke-linejoin="round">HOW FAR WILL YOU GO?</text>
+  <text x="960" y="291" font-size="64" fill="#fff" stroke="${OUT}" stroke-width="14" stroke-linejoin="round" paint-order="stroke">HOW FAR WILL YOU GO?</text>
+</g>`;
+
+// Vignette
+g += `<radialGradient id="vig" cx="50%" cy="50%" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></radialGradient><rect width="1920" height="1080" fill="url(#vig)" pointer-events="none"/>`;
+
+document.getElementById('s').innerHTML = g;
+</script></body></html>

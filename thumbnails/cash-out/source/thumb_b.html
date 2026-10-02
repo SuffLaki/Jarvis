@@ -1,0 +1,113 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Luckiest; src: url(luckiest.ttf); }
+@font-face { font-family: Lilita; src: url(lilita.ttf); }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #1d0b4a; }
+svg { position: absolute; inset: 0; }
+</style></head>
+<body><svg id="s" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<script src="common.js"></script>
+<script>
+const R = rng(42);
+let g = `<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1a0848"/><stop offset=".32" stop-color="#5e1fb0"/><stop offset=".6" stop-color="#e2437a"/><stop offset=".82" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc56b"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbd0"/><stop offset=".4" stop-color="#ffd53b"/><stop offset="1" stop-color="#ff8c00"/></linearGradient>
+  <radialGradient id="dome" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#c8ffb8"/><stop offset=".35" stop-color="#3ee35a"/><stop offset="1" stop-color="#0b7f25"/></radialGradient>
+  <linearGradient id="stoneTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a7bb0"/><stop offset="1" stop-color="#5d4e86"/></linearGradient>
+  <linearGradient id="stoneSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3d2f63"/><stop offset="1" stop-color="#241840"/></linearGradient>
+  <linearGradient id="ped" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b3f55"/><stop offset=".5" stop-color="#5a6080"/><stop offset="1" stop-color="#2a2d40"/></linearGradient>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="24"/></filter>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<rect width="1920" height="1080" fill="url(#sky)"/>`;
+
+// Stars in the upper sky
+for (let i = 0; i < 60; i++) g += `<circle cx="${R() * 1920}" cy="${R() * 300}" r="${1 + R() * 2.5}" fill="#fff" opacity="${0.3 + R() * 0.6}"/>`;
+
+// Sun low on the horizon
+g += `<circle cx="1480" cy="900" r="260" fill="#ffe08a" opacity=".55" filter="url(#glow)"/><circle cx="1480" cy="900" r="150" fill="#fff1b8"/>`;
+
+// Distant tower silhouettes poking out of the clouds
+[[1240, 700, 70], [1760, 640, 90], [1600, 780, 50]].forEach(([x, y, w]) => {
+  g += `<rect x="${x - w / 2}" y="${y}" width="${w}" height="${1080 - y}" fill="#7a3a8a" opacity=".55"/><rect x="${x - w / 2 - 10}" y="${y - 14}" width="${w + 20}" height="18" fill="#7a3a8a" opacity=".55"/>`;
+});
+
+// Cloud sea far below
+function cloud(x, y, s, col, op) {
+  return `<g opacity="${op}" fill="${col}"><ellipse cx="${x}" cy="${y}" rx="${160 * s}" ry="${50 * s}"/><circle cx="${x - 70 * s}" cy="${y - 25 * s}" r="${55 * s}"/><circle cx="${x + 10 * s}" cy="${y - 45 * s}" r="${70 * s}"/><circle cx="${x + 85 * s}" cy="${y - 20 * s}" r="${50 * s}"/></g>`;
+}
+for (let i = 0; i < 9; i++) g += cloud(1000 + i * 130 + R() * 60, 960 + R() * 50, 0.9 + R() * 0.7, '#ffd9c2', 0.85);
+for (let i = 0; i < 7; i++) g += cloud(1050 + i * 150 + R() * 60, 1040 + R() * 30, 1.1 + R() * 0.6, '#fff0e4', 0.95);
+
+// Tiny avatars falling into the clouds
+[[1120, 880, 15, 200], [1235, 1010, 12, -150], [1150, 1065, 9, 120]].forEach(([x, y, u, r]) =>
+  g += avatar(x, y, u, { shirt: ['#ff4757', '#2f7bff', '#ffb800'][Math.floor(R() * 3)], face: 'shock', la: 150, ra: -150, rot: r }));
+// Falling chunks from the ledge
+[[1080, 900, 34, 20], [1130, 980, 22, -30], [1010, 1030, 28, 50], [1190, 870, 16, 10]].forEach(([x, y, s, r]) =>
+  g += `<rect x="${x - s / 2}" y="${y - s / 2}" width="${s}" height="${s * 0.75}" rx="4" fill="#5d4e86" stroke="${OUT}" stroke-width="5" transform="rotate(${r} ${x} ${y})"/>`);
+
+// The ledge / tower top the hero stands on
+g += `<path d="M0,1080 L0,860 L940,860 L1030,925 L1000,960 L1040,1000 L1010,1080 Z" fill="url(#stoneSide)" stroke="${OUT}" stroke-width="8"/>`;
+g += `<path d="M0,860 L940,860 L1030,925 L0,925 Z" fill="url(#stoneTop)" stroke="${OUT}" stroke-width="8" stroke-linejoin="round"/>`;
+for (let i = 1; i < 9; i++) g += `<line x1="${i * 115}" y1="860" x2="${i * 122}" y2="925" stroke="${OUT}" stroke-width="4" opacity=".4"/>`;
+for (let row = 0; row < 3; row++) for (let c = 0; c < 10; c++) {
+  const x = c * 110 - (row % 2) * 55, y = 935 + row * 50;
+  if (x > 960) continue;
+  g += `<rect x="${x + 4}" y="${y}" width="102" height="44" rx="6" fill="${shade('#3a2c60', (R() - 0.5) * 0.3)}" stroke="${OUT}" stroke-width="4"/>`;
+}
+// Glowing red cracks under the hero's feet
+const crack = `M90,925 L160,900 L210,915 L270,885 L330,900 L380,872 L440,890 L520,866 M270,885 L290,862 M380,872 L360,925 M160,900 L140,870 M520,866 L600,905 L680,880 L760,910 L830,875 L900,905 L1000,940`;
+g += `<path d="${crack}" fill="none" stroke="#ff3030" stroke-width="26" opacity=".6" filter="url(#soft)"/>
+<path d="${crack}" fill="none" stroke="${OUT}" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="${crack}" fill="none" stroke="#ff5a2a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+// The CASH OUT arcade button on a pedestal
+const bx = 720, d = 60;
+g += `<ellipse cx="${bx}" cy="905" rx="230" ry="34" fill="#000" opacity=".35" filter="url(#soft)"/>
+<circle cx="${bx}" cy="${700 + d}" r="250" fill="#3cff6a" opacity=".45" filter="url(#glow)"/>
+<path d="M${bx - 175},905 L${bx - 155},${735 + d} L${bx + 155},${735 + d} L${bx + 175},905 Z" fill="url(#ped)" stroke="${OUT}" stroke-width="9" stroke-linejoin="round"/>
+<rect x="${bx - 120}" y="852" width="240" height="40" rx="10" fill="#ffd93b" stroke="${OUT}" stroke-width="6"/>
+<text x="${bx}" y="882" font-family="Lilita" font-size="30" text-anchor="middle" fill="${OUT}">SECURE IT ALL</text>
+<ellipse cx="${bx}" cy="${738 + d}" rx="205" ry="44" fill="#1c1f2e" stroke="${OUT}" stroke-width="9"/>
+<path d="M${bx - 170},${728 + d} L${bx - 170},${700 + d} A170,52 0 0 1 ${bx + 170},${700 + d} L${bx + 170},${728 + d} A170,52 0 0 1 ${bx - 170},${728 + d}Z" fill="#0b7f25" stroke="${OUT}" stroke-width="9"/>
+<path d="M${bx - 170},${700 + d} Q${bx - 165},${585 + d} ${bx},${578 + d} Q${bx + 165},${585 + d} ${bx + 170},${700 + d} A170,52 0 0 1 ${bx - 170},${700 + d}Z" fill="url(#dome)" stroke="${OUT}" stroke-width="9"/>
+<ellipse cx="${bx - 75}" cy="${612 + d}" rx="50" ry="16" fill="#fff" opacity=".7" transform="rotate(-14 ${bx - 75} ${612 + d})"/>
+<text x="${bx}" y="${690 + d}" font-family="Luckiest" font-size="70" text-anchor="middle" fill="#fff" stroke="${OUT}" stroke-width="12" stroke-linejoin="round" paint-order="stroke">CASH OUT</text>`;
+
+// Hero: nervous avatar reaching for the button
+g += `<g>
+  ${[[150, 760], [505, 760]].map(([x, y], i) => `<path d="M${x},${y} q${i % 2 ? 18 : -18},12 0,24 q${i % 2 ? -18 : 18},12 0,24" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".85"/>`).join('')}
+</g>`;
+g += avatar(330, 905, 98, { shirt: '#ff4757', pants: '#26304f', face: 'nervous', la: 12, ra: -70, ll: -4, rl: 4, hair: '#3b2414', logo: '' });
+// Motion lines above the hovering hand
+g += `<path d="M650,535 q10,-30 30,-40 M705,548 q14,-26 36,-30 M605,545 q4,-26 18,-40" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>`;
+
+// Giant multiplier
+g += `<g transform="translate(1440 560) rotate(-6)" font-family="Luckiest" text-anchor="middle">
+  <text y="0" font-size="330" fill="#ffd53b" stroke="#ffd53b" stroke-width="40" opacity=".45" filter="url(#glow)">x100</text>
+  <text y="20" font-size="330" fill="${OUT}" stroke="${OUT}" stroke-width="34" stroke-linejoin="round">x100</text>
+  <text y="0" font-size="330" fill="url(#gold)" stroke="${OUT}" stroke-width="34" stroke-linejoin="round" paint-order="stroke">x100</text>
+  <text y="-6" font-size="330" fill="none" stroke="#fff" stroke-width="4" opacity=".4">x100</text>
+</g>`;
+// Coins and cash bursting around the multiplier
+[[1130, 380, 34, .3], [1790, 330, 30, 1.9], [1820, 640, 38, .8], [1190, 690, 28, 2.4], [1640, 260, 24, 1.1], [1080, 560, 22, .6], [1500, 700, 30, 1.6], [1880, 470, 22, 2.9]].forEach(([x, y, r, a]) => g += coin(x, y, r, a));
+[[1290, 300, 130, -18], [1700, 720, 140, 22]].forEach(([x, y, w, r]) => g += bill(x, y, w, r));
+[[1240, 430, 30], [1700, 410, 26], [1860, 560, 22], [1350, 690, 20], [1560, 300, 18]].forEach(([x, y, r]) => g += sparkle(x, y, r, '#fffbe0'));
+
+// Headline
+g += `<g transform="rotate(-2 960 140)" font-family="Luckiest" text-anchor="middle">
+  <text x="960" y="182" font-size="138" fill="${OUT}" stroke="${OUT}" stroke-width="24" stroke-linejoin="round">HOW FAR WILL YOU GO?</text>
+  <text x="960" y="170" font-size="138" fill="#fff" stroke="${OUT}" stroke-width="24" stroke-linejoin="round" paint-order="stroke">HOW FAR WILL YOU GO?</text>
+</g>
+<g transform="translate(1440 760) rotate(-6)">
+  <rect x="-210" y="-42" width="420" height="84" rx="42" fill="#ff3b5c" stroke="${OUT}" stroke-width="8"/>
+  <text y="22" font-family="Luckiest" font-size="56" text-anchor="middle" fill="#fff" stroke="${OUT}" stroke-width="8" paint-order="stroke">OR LOSE IT ALL!</text>
+</g>`;
+
+// Vignette
+g += `<radialGradient id="vig" cx="50%" cy="50%" r="75%"><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient><rect width="1920" height="1080" fill="url(#vig)"/>`;
+
+document.getElementById('s').innerHTML = g;
+</script></body></html>
